@@ -139,8 +139,9 @@ const CategoriesView: React.FC<CategoriesViewProps> = ({ onClose }) => {
   const stats = getUsageStats();
 
   return (
-    <div className="fixed inset-0 z-50 bg-background overflow-y-auto">
-      <div className="min-h-full p-2 sm:p-4">
+    <div className="fixed inset-0 z-50 bg-background flex flex-col">
+      <div className="flex-1 overflow-y-auto">
+        <div className="min-h-full p-2 sm:p-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-4">
         <div>
@@ -160,14 +161,15 @@ const CategoriesView: React.FC<CategoriesViewProps> = ({ onClose }) => {
                 Add Category
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col">
               <DialogHeader>
                 <DialogTitle>Add New Category</DialogTitle>
                 <DialogDescription>
                   Create a custom category for your transactions
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-6 py-4">
+              <div className="flex-1 modal-content">
+                <div className="space-y-6 py-4">
                 {/* Category Name */}
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-sm font-medium">
@@ -321,8 +323,9 @@ const CategoriesView: React.FC<CategoriesViewProps> = ({ onClose }) => {
                     </div>
                   </div>
                 </div>
+                </div>
               </div>
-              <DialogFooter className="flex gap-3 pt-6">
+              <DialogFooter className="flex gap-3 pt-6 flex-shrink-0">
                 <Button 
                   type="button" 
                   variant="outline" 
@@ -500,6 +503,7 @@ const CategoriesView: React.FC<CategoriesViewProps> = ({ onClose }) => {
           </CardContent>
         </Card>
       )}
+        </div>
       </div>
     </div>
   );

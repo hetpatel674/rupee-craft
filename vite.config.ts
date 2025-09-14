@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => ({
     host: "0.0.0.0",
     port: 12000,
     strictPort: true,
-    allowedHosts: "all",
+    allowedHosts: ["work-1-vfenqkmgsuqatlof.prod-runtime.all-hands.dev", "localhost", "127.0.0.1"],
     cors: true,
     headers: {
       'Access-Control-Allow-Origin': '*',

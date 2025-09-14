@@ -71,8 +71,8 @@ const Categories: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-card-border">
-        <div className="p-4">
+      <div className="filter-tabs-container">
+        <div>
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl font-bold">Categories</h1>
@@ -122,7 +122,7 @@ const Categories: React.FC = () => {
           </div>
 
           {/* Filter Tabs */}
-          <div className="flex space-x-1 bg-card/20 p-1 rounded-lg">
+          <div className="filter-tabs">
             {[
               { key: 'all', label: 'All Categories', icon: BarChart3 },
               { key: 'income', label: 'Income', icon: TrendingUp },
@@ -132,10 +132,10 @@ const Categories: React.FC = () => {
                 key={key}
                 onClick={() => setSelectedType(key as typeof selectedType)}
                 className={cn(
-                  "flex-1 flex items-center justify-center py-2 px-3 rounded-md transition-all duration-200",
+                  "filter-tab",
                   selectedType === key
                     ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/20"
                 )}
               >
                 <Icon className="w-4 h-4 mr-2" />
