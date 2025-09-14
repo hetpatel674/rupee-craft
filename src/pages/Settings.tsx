@@ -17,7 +17,11 @@ import {
   Moon,
   BarChart3,
   Grid3X3,
-  Tag
+  Tag,
+  FolderOpen,
+  ExternalLink,
+  CheckCircle,
+  Copy
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -36,6 +40,12 @@ const Settings: React.FC = () => {
   const [pendingImportFile, setPendingImportFile] = useState<File | null>(null);
   const [importValidationError, setImportValidationError] = useState<string | null>(null);
   const [showCategories, setShowCategories] = useState(false);
+  const [exportSuccess, setExportSuccess] = useState<{
+    filename: string;
+    path: string;
+    size: string;
+  } | null>(null);
+  const [isExportSuccessDialogOpen, setIsExportSuccessDialogOpen] = useState(false);
 
   const handleExportData = () => {
     if (!customFilename.trim()) {
@@ -54,7 +64,8 @@ const Settings: React.FC = () => {
         version: '1.0.0',
       };
 
-      const blob = new Blob([JSON.stringify(dataToExport, null, 2)], {
+      const jsonString = JSON.stringify(dataToExport, null, 2);
+      const blob = new Blob([jsonString], {
         type: 'application/json',
       });
 
@@ -68,13 +79,28 @@ const Settings: React.FC = () => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      toast({
-        title: "Data exported",
-        description: `Your transaction data has been downloaded as ${filename}.`,
+      // Calculate file size
+      const fileSizeKB = Math.round((jsonString.length / 1024) * 100) / 100;
+      const fileSize = fileSizeKB < 1024 ? `${fileSizeKB} KB` : `${Math.round((fileSizeKB / 1024) * 100) / 100} MB`;
+
+      // Get download path (typically Downloads folder)
+      const downloadPath = navigator.userAgent.includes('Windows') 
+        ? `C:\\Users\\${navigator.userAgent.split('Windows NT')[0] || 'User'}\\Downloads\\${filename}`
+        : navigator.userAgent.includes('Mac')
+        ? `/Users/${navigator.userAgent.split('Mac OS X')[0] || 'user'}/Downloads/${filename}`
+        : `/home/${navigator.userAgent.split('Linux')[0] || 'user'}/Downloads/${filename}`;
+
+      // Set export success data
+      setExportSuccess({
+        filename,
+        path: downloadPath,
+        size: fileSize
       });
 
       setIsExportDialogOpen(false);
       setCustomFilename('');
+      setIsExportSuccessDialogOpen(true);
+
     } catch (error) {
       toast({
         title: "Export failed",
@@ -186,6 +212,52 @@ const Settings: React.FC = () => {
   const handleClearAllData = () => {
     localStorage.removeItem('expense-tracker-transactions');
     window.location.reload();
+  };
+
+  const handleOpenFileLocation = () => {
+    if (!exportSuccess) return;
+    
+    // Try to open the Downloads folder
+    if (navigator.userAgent.includes('Windows')) {
+      // For Windows, try to open Downloads folder
+      window.open('file:///C:/Users/' + (process.env.USERNAME || 'User') + '/Downloads/', '_blank');
+    } else if (navigator.userAgent.includes('Mac')) {
+      // For Mac, try to open Downloads folder
+      window.open('file:///Users/' + (process.env.USER || 'user') + '/Downloads/', '_blank');
+    } else {
+      // For Linux/other systems
+      window.open('file:///home/' + (process.env.USER || 'user') + '/Downloads/', '_blank');
+    }
+    
+    toast({
+      title: "Opening Downloads folder",
+      description: "Your browser will attempt to open the Downloads folder.",
+    });
+  };
+
+  const handleCopyPath = async () => {
+    if (!exportSuccess) return;
+    
+    try {
+      await navigator.clipboard.writeText(exportSuccess.path);
+      toast({
+        title: "Path copied",
+        description: "File path has been copied to clipboard.",
+      });
+    } catch (error) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = exportSuccess.path;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      toast({
+        title: "Path copied",
+        description: "File path has been copied to clipboard.",
+      });
+    }
   };
 
   const settingSections = [
@@ -505,6 +577,73 @@ const Settings: React.FC = () => {
           />
         </div>
       )}
+
+      {/* Export Success Dialog */}
+      <Dialog open={isExportSuccessDialogOpen} onOpenChange={setIsExportSuccessDialogOpen}>
+        <DialogContent className="glass-card border-card-border max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-income" />
+              Export Successful
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Alert className="border-income/20 bg-income/5">
+              <Download className="w-4 h-4 text-income" />
+              <AlertDescription className="text-foreground">
+                Your transaction data has been successfully exported!
+              </AlertDescription>
+            </Alert>
+            
+            {exportSuccess && (
+              <div className="space-y-3">
+                <div className="glass-card p-4 rounded-lg space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Filename:</span>
+                    <span className="text-sm font-medium">{exportSuccess.filename}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Size:</span>
+                    <span className="text-sm font-medium">{exportSuccess.size}</span>
+                  </div>
+                  <div className="space-y-2">
+                    <span className="text-sm text-muted-foreground">Location:</span>
+                    <div className="flex items-center gap-2 p-2 bg-muted/20 rounded text-xs font-mono break-all">
+                      <span className="flex-1">{exportSuccess.path}</span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleCopyPath}
+                        className="h-6 w-6 p-0 hover:bg-primary/10"
+                        title="Copy path"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleOpenFileLocation}
+                    className="flex-1 btn-primary-glass"
+                  >
+                    <FolderOpen className="w-4 h-4 mr-2" />
+                    Open Location
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsExportSuccessDialogOpen(false)}
+                    className="flex-1"
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Categories Modal */}
       {showCategories && (
